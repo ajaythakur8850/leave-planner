@@ -12,7 +12,7 @@ var AM_NAME      = 'Ajay Kumar';
 var AM_FIRST_PIN = '1234';      // you will be asked to set your own PIN at first sign-in
 var TIMEZONE     = 'Asia/Kolkata';
 var SHEET_ID     = '';   // the "Leave Planner" Google Sheet
-function getSS() { return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
+var openSheet_ = function () { return SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.getActiveSpreadsheet(); }
 
 var SHEETS = {
   Users:  ['emp', 'name', 'role', 'store', 'pinHash', 'mustChange', 'active', 'dept'],
@@ -22,7 +22,7 @@ var SHEETS = {
 };
 
 function setup() {
-  var ss = getSS();
+  var ss = openSheet_();
   Object.keys(SHEETS).forEach(function (name) {
     var sh = ss.getSheetByName(name) || ss.insertSheet(name);
     sh.getRange(1, 1, sh.getMaxRows(), SHEETS[name].length).setNumberFormat('@');
@@ -60,7 +60,7 @@ function makeEnv() {
 }
 
 function sheetDb() {
-  var ss = getSS(), cache = {};
+  var ss = openSheet_(), cache = {};
   function fmt(v) {
     if (v instanceof Date) return Utilities.formatDate(v, TIMEZONE, 'yyyy-MM-dd');
     return v == null ? '' : String(v);
