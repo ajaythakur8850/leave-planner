@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Management Leave Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1d4ed8">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Leave Planner">
 <style>
 :root{--bg:#f4f6f9;--card:#fff;--ink:#1c2430;--mut:#667085;--line:#e3e7ee;--pri:#1d4ed8;--acc:#db2777;--soft:#f8fafc;
 --pri2:color-mix(in srgb,var(--acc) 13%,var(--card));
@@ -104,6 +111,7 @@ body.dark .demobar{background:#3a3115;color:#f3d77a}
     <button class="btn" style="width:100%" id="lBtn" onclick="doLogin()">Sign in</button>
     <div class="sub" style="margin-top:10px">First time? Your PIN is <b>1234</b>. You will be asked to set your own PIN.<br>Forgot PIN? Ask your AM to reset it to 1234.</div>
     <div id="demoHint" class="demo hidden"></div>
+    <div id="installBox" class="demo hidden" style="margin-top:12px"><b>📲 Get the app</b><br><span id="installText">Install Leave Planner on your phone for one-tap access.</span><br><button class="btn sm" id="installBtn2" style="margin-top:8px" onclick="installApp()">Install app</button></div>
   </div>
 </div>
 
@@ -113,7 +121,7 @@ body.dark .demobar{background:#3a3115;color:#f3d77a}
     <div class="logo" style="background:rgba(255,255,255,.18)">LP</div>
     <div><div style="font-weight:700">Management Leave Planner</div><div style="font-size:12px;opacity:.85" id="regionName2"></div></div>
     <div class="who"><div id="whoName" style="font-weight:700"></div><div id="whoRole"></div></div>
-    <select class="theme" id="themeSel" onchange="setTheme(this.value)"></select><button id="darkBtn" onclick="toggleDark()">☾ Dark</button><button onclick="openPin()">Change PIN</button><button onclick="logout()">Sign out</button>
+    <select class="theme" id="themeSel" onchange="setTheme(this.value)"></select><button id="darkBtn" onclick="toggleDark()">☾ Dark</button><button id="installBtn" class="hidden" onclick="installApp()">📲 Install app</button><button onclick="openPin()">Change PIN</button><button onclick="logout()">Sign out</button>
   </div></div>
   <div class="wrap" id="main">
     <div class="tabs" id="tabs"></div>
@@ -628,6 +636,23 @@ function toggleDark(force){var on=force===undefined?!document.body.classList.con
   ['darkBtn','darkBtn2'].forEach(function(id){var e=$(id);if(e)e.textContent=on?'☀ Light':'☾ Dark';});}
 function initTheme(){var order=[DEFAULT_THEME].concat(THEMES.map(function(_,i){return i;}).filter(function(i){return i!==DEFAULT_THEME;}));var opts=order.map(function(i){var t=THEMES[i];return '<option value="'+i+'">🎨 '+t[0]+(i===DEFAULT_THEME?' (default)':'')+'</option>';}).join('');
   ['themeSel','themeSel2'].forEach(function(id){$(id).innerHTML=opts;});setTheme(store_('lp_theme'));toggleDark(store_('lp_dark')==='1');}
+
+/* ---------- install as app ---------- */
+var deferredInstall=null;
+function isStandalone(){return (window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;}
+function showInstall(on){$('installBtn').classList.toggle('hidden',!on);$('installBox').classList.toggle('hidden',!on);}
+window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();deferredInstall=e;if(!isStandalone())showInstall(true);});
+window.addEventListener('appinstalled',function(){deferredInstall=null;showInstall(false);toast('App installed');});
+function installApp(){
+  if(deferredInstall){deferredInstall.prompt();deferredInstall.userChoice.then(function(){deferredInstall=null;});return;}
+  toast(/iphone|ipad/i.test(navigator.userAgent)?'In Safari: tap Share, then "Add to Home Screen"':'In Chrome: tap ⋮ menu, then "Add to Home screen"');
+}
+(function(){
+  if(location.protocol==='https:'&&'serviceWorker' in navigator){try{navigator.serviceWorker.register('sw.js').catch(function(){});}catch(e){}}
+  if(!isStandalone()&&/iphone|ipad/i.test(navigator.userAgent)){
+        setTimeout(function(){$('installBox').classList.remove('hidden');$('installText').textContent='On iPhone: open in Safari, tap Share ⬆, then "Add to Home Screen".';$('installBtn2').classList.add('hidden');},0);
+  }
+})();
 
 /* ---------- start ---------- */
 (function(){
